@@ -123,7 +123,7 @@ class DevMem:
         if self.f:
             os.close(self.f)
     
-    def read(self, offset, length):
+    def read(self, offset, buswidth,length):
         """Read length number of words from offset"""
 
         if offset < 0 or length < 0: raise AssertionError
@@ -168,7 +168,7 @@ class DevMem:
 
         # Seek to the aligned offset
         virt_base_addr = self.base_addr_offset & self.mask
-        #mem.seek(virt_base_addr + offset)
+        mem.seek(virt_base_addr + offset)
 
         # Read until the end of our aligned address
         for i in range(len(din)):
@@ -176,7 +176,7 @@ class DevMem:
                         format(virt_base_addr + offset, din[i]))
             # Write one word at a time
             mv_as_int32 = self.mv.cast('I')  # Note "I" works as intended, "L" still results in duplicate writes; "LL" is not an option
-            mv_as_int32[(virt_base_addr + offset) // 4] = din[i] 
+            mv_as_int32[0] = din[i] 
             #mem.write(struct.pack('I', din[i]))
 
     def debug_set(self, value):
