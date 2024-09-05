@@ -115,11 +115,14 @@ class DevMem:
         self.mem = mmap.mmap(self.f, self.length, mmap.MAP_SHARED,
                 mmap.PROT_READ | mmap.PROT_WRITE,
                 offset=self.base_addr)
+        self.mv = memoryview(self.mem)
+
+
 
     def __del__(self):
         if self.f:
             os.close(self.f)
-
+    
     def read(self, offset, length):
         """Read length number of words from offset"""
 
@@ -165,14 +168,16 @@ class DevMem:
 
         # Seek to the aligned offset
         virt_base_addr = self.base_addr_offset & self.mask
-        mem.seek(virt_base_addr + offset)
+        #mem.seek(virt_base_addr + offset)
 
         # Read until the end of our aligned address
         for i in range(len(din)):
             self.debug('writing at position = {0}: 0x{1:x}'.
-                        format(self.mem.tell(), din[i]))
+                        format(virt_base_addr + offset, din[i]))
             # Write one word at a time
-            mem.write(struct.pack('I', din[i]))
+            mv_as_int32 = self.mv.cast('I')  # Note "I" works as intended, "L" still results in duplicate writes; "LL" is not an option
+            mv_as_int32[(virt_base_addr + offset) // 4] = din[i] 
+            #mem.write(struct.pack('I', din[i]))
 
     def debug_set(self, value):
         self._debug = value
