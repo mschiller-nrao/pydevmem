@@ -116,8 +116,8 @@ class DevMem:
         self.mem = mmap.mmap(self.f, self.length, mmap.MAP_SHARED,
                 mmap.PROT_READ | mmap.PROT_WRITE,
                 offset=self.base_addr)
-        self.array = np.frombuffer(self.mem, np.uint32, self.length >> 2)
-        #self.mv = memoryview(self.mem)
+        #self.array = np.frombuffer(self.mem, np.uint32, self.length >> 2)
+        self.mv = memoryview(self.mem)
 
 
 
@@ -170,18 +170,18 @@ class DevMem:
 
         # Seek to the aligned offset
         virt_base_addr = self.base_addr_offset & self.mask
-        #mem.seek(virt_base_addr + offset)
+        mem.seek(virt_base_addr + offset)
 
         # Read until the end of our aligned address
         for i in range(len(din)):
             self.debug('writing at position = {0}: 0x{1:x}'.
                         format(virt_base_addr + offset, din[i]))
-            idx = (virt_base_addr + offset) >> 2
-            self.array[idx] = np.uint32(din[i])
+            #idx = (virt_base_addr + offset) >> 2
+            #self.array[idx] = np.uint32(din[i])
             # Write one word at a time
-            #mv_as_int32 = self.mv.cast('I')  # Note "I" works as intended, "L" still results in duplicate writes; "LL" is not an option
-            #mv_as_int32[0] = din[i] 
-            #mem.write(struct.pack('I', din[i]))
+            mv_as_int32 = self.mv.cast('I')  # Note "I" works as intended, "L" still results in duplicate writes; "LL" is not an option
+            mv_as_int32[0] = din[i] 
+            mem.write(struct.pack('I', din[i]))
 
     def debug_set(self, value):
         self._debug = value
